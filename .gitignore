@@ -1,0 +1,30 @@
+# Binaries
+gateway
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go
+vendor/
+
+# IDE
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+
+# Environment
+.env
+
+# Coverage
+coverage.out
+
+# Build
+bin/
+dist/
