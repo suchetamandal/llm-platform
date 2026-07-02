@@ -1,0 +1,20 @@
+.DS_Store
+.env
+*.log
+
+# Go
+vendor/
+coverage.out
+bin/
+dist/
+
+# Binaries
+*.exe
+*.dll
+*.so
+*.dylib
+gateway/gateway
+
+# IDE
+.vscode/
+.idea/
