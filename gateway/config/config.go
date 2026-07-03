@@ -3,8 +3,9 @@ package config
 import "os"
 
 type Config struct {
-	Port         string
-	OpenAIAPIKey string
+	Port           string
+	RequestTimeout string
+	OpenAIAPIKey   string
 }
 
 func Load() Config {
@@ -13,8 +14,14 @@ func Load() Config {
 		port = "8080"
 	}
 
+	timeout := os.Getenv("REQUEST_TIMEOUT")
+	if timeout == "" {
+		timeout = "30s"
+	}
+
 	return Config{
-		Port:         port,
-		OpenAIAPIKey: os.Getenv("OPENAI_API_KEY"),
+		Port:           port,
+		RequestTimeout: timeout,
+		OpenAIAPIKey:   os.Getenv("OPENAI_API_KEY"),
 	}
 }
