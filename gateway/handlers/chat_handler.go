@@ -10,7 +10,7 @@ import (
 	"github.com/suchetamandal/llm-platform/gateway/services/llm"
 )
 
-func ChatHandler(c *gin.Context){
+func ChatHandler(c *gin.Context) {
 	var req models.ChatRequest
 
 	//validates request.
@@ -20,8 +20,13 @@ func ChatHandler(c *gin.Context){
 	}
 
 	// c.Request.Context() allows cancellation if client disconnects.
-	//calls the LLM service.
-	stream, err := llm.GenerateStream(c.Request.Context(), req.Message)
+	//calls the LLM service
+	stream, err := llm.GenerateStream(c.Request.Context(), req.Message, llm.ChatOptions{
+		Model:       req.Model,
+		Provider:    req.Provider,
+		Temperature: req.Temperature,
+	})
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

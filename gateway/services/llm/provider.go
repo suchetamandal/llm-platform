@@ -1,6 +1,12 @@
 package llm
 
-import "context" 
+import "context"
+
+type ChatOptions struct {
+	Model       string
+	Provider    string
+	Temperature *float64
+}
 
 type Provider interface {
 	// Stream starts generating a response for the given prompt.
@@ -13,5 +19,5 @@ type Provider interface {
 	// If the provided context is cancelled or reaches its deadline,
 	// the implementation should stop generating output and close the channel.
 
-	Stream(ctx context.Context, prompt string) (<-chan string, error)
+	Stream(ctx context.Context, prompt string, opts ChatOptions) (<-chan string, error)
 }

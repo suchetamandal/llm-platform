@@ -10,7 +10,7 @@ import (
 
 var (
 	visitors = make(map[string]*rate.Limiter)
-	mu sync.Mutex
+	mu       sync.Mutex
 )
 
 func getRateLimiter(ip string) *rate.Limiter {
@@ -23,14 +23,14 @@ func getRateLimiter(ip string) *rate.Limiter {
 		return limiter
 	}
 
-	limiter = rate.NewLimiter(1,5)
+	limiter = rate.NewLimiter(1, 5)
 	visitors[ip] = limiter
 
 	return limiter
 }
 
 func RateLimiter() gin.HandlerFunc {
-	return func(c *gin.Context){
+	return func(c *gin.Context) {
 		ip := c.ClientIP()
 		limiter := getRateLimiter(ip)
 

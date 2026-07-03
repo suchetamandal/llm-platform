@@ -7,15 +7,15 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func Logger() gin.HandlerFunc{
-	return func(c *gin.Context){
+func Logger() gin.HandlerFunc {
+	return func(c *gin.Context) {
 		start := time.Now()
 
 		/**
 		It tells Gin:
 		"I'm done with my work. Continue executing the next middleware or the final route handler."
 		Without c.Next(), the request stops at the current middleware.
-		**/ 
+		**/
 
 		c.Next()
 
