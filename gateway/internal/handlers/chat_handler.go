@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/suchetamandal/llm-platform/gateway/models"
-	"github.com/suchetamandal/llm-platform/gateway/services/llm"
+	"github.com/suchetamandal/llm-platform/gateway/internal/models"
+	"github.com/suchetamandal/llm-platform/gateway/internal/service/llm"
 )
 
 func ChatHandler(c *gin.Context) {

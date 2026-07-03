@@ -7,7 +7,7 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o gateway .
+RUN CGO_ENABLED=0 go build -o gateway ./cmd/server
 
 FROM alpine:latest
 

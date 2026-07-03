@@ -10,10 +10,11 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"github.com/suchetamandal/llm-platform/gateway/config"
-	"github.com/suchetamandal/llm-platform/gateway/handlers"
-	"github.com/suchetamandal/llm-platform/gateway/middleware"
+	"github.com/suchetamandal/llm-platform/gateway/internal/config"
+	"github.com/suchetamandal/llm-platform/gateway/internal/handlers"
+	"github.com/suchetamandal/llm-platform/gateway/internal/middleware"
 )
 
 func main() {
@@ -30,14 +31,17 @@ func main() {
 	r.Use(gin.Recovery())
 	r.Use(middleware.Logger())
 	r.Use(middleware.Timeout(requestTimeout))
+	r.Use(middleware.Metrics())
 
 	r.GET("/healthz", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok"})
 	})
 
+	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
+
 	v1 := r.Group("/v1")
 	v1.Use(middleware.AuthMiddleware())
-	v1.Use(middleware.RateLimiter())
+	v1.Use(middleware.RedisRateLimiter()) // previously it was RateLimiter
 	v1.POST("/chat", handlers.ChatHandler)
 
 	server := &http.Server{
