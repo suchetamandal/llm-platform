@@ -6,6 +6,7 @@ type Config struct {
 	Port           string
 	RequestTimeout string
 	OpenAIAPIKey   string
+	JWTSecret      string
 }
 
 func Load() Config {
@@ -19,9 +20,15 @@ func Load() Config {
 		timeout = "30s"
 	}
 
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		jwtSecret = "dev-secret"
+	}
+
 	return Config{
 		Port:           port,
 		RequestTimeout: timeout,
 		OpenAIAPIKey:   os.Getenv("OPENAI_API_KEY"),
+		JWTSecret:      jwtSecret,
 	}
 }

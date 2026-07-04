@@ -40,7 +40,7 @@ func main() {
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	v1 := r.Group("/v1")
-	v1.Use(middleware.AuthMiddleware())
+	v1.Use(middleware.AuthMiddleware(cfg.JWTSecret))
 	v1.Use(middleware.RedisRateLimiter()) // previously it was RateLimiter
 	v1.POST("/chat", handlers.ChatHandler)
 
