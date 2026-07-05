@@ -9,3 +9,4 @@ class DocumentUploadResponse(BaseModel):
     extracted_text_path: str
     status: str
     extracted_chars: int
+    chunk_count: int

@@ -1,0 +1,10 @@
+--- Page 1 ---
+LLM Platform Sample Document
+This is a sample PDF used to test the RAG ingestion pipeline. It contains enough text for extraction,
+chunking, embeddings, and retrieval.
+Large language models cannot efficiently search large documents directly. A Retrieval-Augmented
+Generation (RAG) pipeline extracts text, splits it into chunks, generates embeddings for each
+chunk, stores them in a vector database such as pgvector, and retrieves the most relevant chunks
+at query time.
+This document should be successfully uploaded, parsed, chunked, and stored by the FastAPI RAG
+service.
