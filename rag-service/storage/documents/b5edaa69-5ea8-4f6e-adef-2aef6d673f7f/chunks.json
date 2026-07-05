@@ -1,0 +1,11 @@
+[
+  {
+    "document_id": "b5edaa69-5ea8-4f6e-adef-2aef6d673f7f",
+    "chunk_id": "b5edaa69-5ea8-4f6e-adef-2aef6d673f7f:0",
+    "chunk_index": 0,
+    "text": "hello rag token chunking and embeddings\n",
+    "char_start": 0,
+    "char_end": 40,
+    "token_estimate": 8
+  }
+]
