@@ -1,0 +1,16 @@
+[project]
+name = "rag-service"
+version = "0.1.0"
+description = "Production-oriented RAG service for LLM Platform"
+requires-python = ">=3.11"
+
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "pydantic",
+    "pydantic-settings",
+]
+
+[tool.uvicorn]
+host = "0.0.0.0"
+port = 8001

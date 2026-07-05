@@ -1,20 +1,29 @@
-.DS_Store
-.env
-*.log
-
 # Go
-vendor/
-coverage.out
 bin/
-dist/
+*.test
+coverage.out
 
-# Binaries
-*.exe
-*.dll
-*.so
-*.dylib
-gateway/gateway
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+build/
+dist/
+*.egg-info/
+
+# Env
+.env
+.env.*
 
 # IDE
 .vscode/
 .idea/
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
