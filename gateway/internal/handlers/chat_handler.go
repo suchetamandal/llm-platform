@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/suchetamandal/llm-platform/gateway/internal/apperrors"
 	"github.com/suchetamandal/llm-platform/gateway/internal/models"
 	"github.com/suchetamandal/llm-platform/gateway/internal/service/llm"
 )
@@ -15,7 +16,7 @@ func ChatHandler(c *gin.Context) {
 
 	//validates request.
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "message is required"})
+		apperrors.BadRequest(c, "CHAT_001", "message is required")
 		return
 	}
 

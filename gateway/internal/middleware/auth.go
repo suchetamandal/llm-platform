@@ -2,10 +2,10 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
-	"net/http"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/suchetamandal/llm-platform/gateway/internal/apperrors"
 )
 
 const UserIDKey = "user_id"
@@ -20,13 +20,13 @@ func AuthMiddleware(secret string) gin.HandlerFunc {
 		authHeader := c.GetHeader("Authorization")
 
 		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "missing authorization header"})
+			apperrors.Unauthorized(c, "AUTH_001", "missing authorization header")
 			c.Abort()
 			return
 		}
 
 		if !strings.HasPrefix(authHeader, "Bearer ") {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid authorization header"})
+			apperrors.Unauthorized(c, "AUTH_001", "missing authorization header")
 			c.Abort()
 			return
 		}
@@ -39,13 +39,13 @@ func AuthMiddleware(secret string) gin.HandlerFunc {
 		})
 
 		if err != nil || !token.Valid {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+			apperrors.Unauthorized(c, "AUTH_002", "invalid token")
 			c.Abort()
 			return
 		}
 
 		if claims.UserID == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "missing user_id claim"})
+			apperrors.Unauthorized(c, "AUTH_003", "missing user_id claim")
 			c.Abort()
 			return
 		}
