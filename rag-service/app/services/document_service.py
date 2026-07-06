@@ -59,7 +59,10 @@ class DocumentService:
             chunks=chunks,
         )
 
-        embeddings = await self.embedding_service.embed_chunks(chunks)
+        embeddings = await self.embedding_service.generate_embeddings(
+            document_id=document_id,
+            chunks=chunks,
+        )
 
         self.embedding_repository.save_embeddings(
             document_dir=document_dir,

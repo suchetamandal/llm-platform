@@ -1,3 +1,4 @@
+from app.core.config import settings
 from app.domain.chunk import DocumentChunk
 from app.domain.embedding import ChunkEmbedding
 from app.providers.embedding_provider import EmbeddingProvider
@@ -6,19 +7,36 @@ from app.providers.embedding_provider import EmbeddingProvider
 class EmbeddingService:
     def __init__(self, provider: EmbeddingProvider):
         self.provider = provider
+        self.batch_size = settings.embedding_batch_size
 
-    async def embed_chunks(self, chunks: list[DocumentChunk]) -> list[ChunkEmbedding]:
-        texts = [chunk.text for chunk in chunks]
+    async def generate_embeddings(
+        self,
+        document_id: str,
+        chunks: list[DocumentChunk],
+    ) -> list[ChunkEmbedding]:
+        embeddings: list[ChunkEmbedding] = []
 
-        vectors = await self.provider.embed_texts(texts)
+        for i in range(0, len(chunks), self.batch_size):
+            batch = chunks[i : i + self.batch_size]
+            texts = [chunk.text for chunk in batch]
 
-        return [
-            ChunkEmbedding(
-                document_id=chunk.document_id,
-                chunk_index=chunk.chunk_index,
-                embedding=vector,
-                provider=getattr(self.provider, "provider", "unknown"),
-                model=getattr(self.provider, "model", "unknown"),
-            )
-            for chunk, vector in zip(chunks, vectors)
-        ]
+            vectors = await self.provider.embed_texts(texts)
+
+            if len(vectors) != len(batch):
+                raise ValueError(
+                    f"Embedding provider returned {len(vectors)} vectors "
+                    f"for {len(batch)} chunks"
+                )
+
+            for chunk, vector in zip(batch, vectors):
+                embeddings.append(
+                    ChunkEmbedding(
+                        document_id=document_id,
+                        chunk_index=chunk.chunk_index,
+                        embedding=vector,
+                        provider=settings.embedding_provider,
+                        model=self.provider.model,
+                    )
+                )
+
+        return embeddings
