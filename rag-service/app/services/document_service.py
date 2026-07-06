@@ -5,7 +5,7 @@ from fastapi import HTTPException, UploadFile
 
 from app.core.config import settings
 from app.domain.document import DocumentUploadResponse
-from app.providers.mock_embedding_provider import MockEmbeddingProvider
+from app.providers.embedding_provider_factory import EmbeddingProviderFactory
 from app.repositories.chunk_repository import ChunkRepository
 from app.repositories.document_storage import LocalDocumentStorage
 from app.repositories.embedding_repository import EmbeddingRepository
@@ -21,7 +21,7 @@ class DocumentService:
         self.chunker = TokenChunkingService()
         self.chunk_repository = ChunkRepository()
 
-        self.embedding_service = EmbeddingService(MockEmbeddingProvider())
+        self.embedding_service = EmbeddingService(EmbeddingProviderFactory.create())
         self.embedding_repository = EmbeddingRepository()
 
     async def upload_document(self, file: UploadFile) -> DocumentUploadResponse:
