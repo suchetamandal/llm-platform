@@ -1,289 +1,283 @@
 # LLM Platform
 
-> A production-style LLM Platform built to explore modern AI infrastructure and backend engineering patterns.
+A production-oriented LLM Platform demonstrating the architecture and engineering practices expected for Senior/Staff LLM Backend Infrastructure roles.
 
-This project is designed to demonstrate the architecture, engineering practices, and infrastructure commonly used in production LLM systems. Rather than building a simple chatbot, the goal is to build a scalable platform capable of serving multiple models, supporting Retrieval-Augmented Generation (RAG), AI agents, observability, and distributed deployment.
+## Architecture
+
+```text
+                        +----------------------+
+                        |      Client          |
+                        +----------+-----------+
+                                   |
+                                   | HTTP
+                                   |
+                        +----------v-----------+
+                        |   API Gateway (Go)   |
+                        |----------------------|
+                        | JWT Authentication   |
+                        | Rate Limiting        |
+                        | Request IDs          |
+                        | Logging              |
+                        | Timeouts             |
+                        | Provider Routing     |
+                        +----------+-----------+
+                                   |
+                 +-----------------+-----------------+
+                 |                                   |
+                 |                                   |
+        +--------v--------+                 +--------v--------+
+        | OpenAI Provider |                 |   RAG Service   |
+        +-----------------+                 |   (FastAPI)     |
+                                            |-----------------|
+                                            | Query Embedding |
+                                            | Similarity      |
+                                            | Context Builder |
+                                            | Prompt Builder  |
+                                            +--------+--------+
+                                                     |
+                                                     |
+                                          +----------v----------+
+                                          | PostgreSQL +        |
+                                          | pgvector            |
+                                          +----------+----------+
+                                                     |
+                                                     |
+                                          +----------v----------+
+                                          | Ollama / OpenAI     |
+                                          +---------------------+
+```
+
+## Components
+
+### API Gateway (Go)
+
+Responsibilities:
+
+* JWT Authentication
+* Redis Rate Limiting
+* Request ID propagation
+* Structured logging
+* Request timeouts
+* Provider routing
+* Service-to-service communication
+
+Public APIs:
+
+```
+POST /v1/chat
+POST /v1/rag
+GET  /healthz
+GET  /metrics
+```
 
 ---
 
-# Project Goals
+### RAG Service (Python)
 
-* Build a production-grade AI Gateway in Go
-* Support multiple LLM providers through a common interface
-* Implement streaming responses using Server-Sent Events (SSE)
-* Build an enterprise RAG pipeline
-* Learn AI infrastructure and distributed systems
-* Demonstrate software engineering practices expected from Senior/Staff Backend Engineers
+Responsibilities:
+
+* Document upload
+* Text extraction
+* Token-aware chunking
+* Embedding generation
+* Similarity search using pgvector
+* Context construction
+* Prompt construction
+* LLM interaction
+
+Internal APIs:
+
+```
+POST /v1/documents
+POST /v1/rag
+POST /v1/retrieval
+```
+
+The RAG service is intended to be an internal service. Clients communicate only with the Gateway.
 
 ---
 
-# Current Architecture
+## RAG Pipeline
 
+### Document Ingestion
+
+```text
+Upload Document
+        │
+        ▼
+Text Extraction
+        │
+        ▼
+Token-aware Chunking
+        │
+        ▼
+Embedding Generation
+        │
+        ▼
+PostgreSQL + pgvector
 ```
-                Client
-                   │
-                   ▼
-          Go AI Gateway (Gin)
-                   │
- ┌─────────────────────────────────────┐
- │ Middleware                          │
- │                                     │
- │ • Request ID                        │
- │ • JWT Authentication                │
- │ • Redis Rate Limiting               │
- │ • Structured Logging                │
- │ • Timeout                           │
- │ • Prometheus Metrics                │
- └─────────────────────────────────────┘
-                   │
-                   ▼
-             Chat Handler
-                   │
-                   ▼
-              LLM Service
-                   │
-        ┌──────────┼──────────┐
-        │          │          │
-     Mock      Ollama     OpenAI
+
+### Question Answering
+
+```text
+User Question
+       │
+       ▼
+Query Embedding
+       │
+       ▼
+Similarity Search
+       │
+       ▼
+Top-K Chunks
+       │
+       ▼
+Context Builder
+       │
+       ▼
+Prompt Builder
+       │
+       ▼
+LLM
+       │
+       ▼
+Answer
 ```
 
 ---
 
-# Repository Structure
+# Local Development
 
+## Start the Platform
+
+From the repository root:
+
+```bash
+docker compose up --build
 ```
+
+This starts:
+
+* API Gateway
+* RAG Service
+* PostgreSQL + pgvector
+* Redis
+
+---
+
+## Generate a Development JWT
+
+Install PyJWT once:
+
+```bash
+python3 -m pip install PyJWT
+```
+
+Generate and export a development token:
+
+```bash
+eval "$(python3 generate_jwt.py)"
+```
+
+Verify:
+
+```bash
+echo $TOKEN
+```
+
+---
+
+## Upload a Document
+
+Example:
+
+```bash
+curl -X POST http://localhost:8000/v1/documents \
+  -F "file=@sample.txt"
+```
+
+---
+
+## Query Through the Gateway
+
+```bash
+curl -X POST http://localhost:8080/v1/rag \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query":"What is RAG?",
+    "top_k":3
+  }'
+```
+
+Example response:
+
+```json
+{
+  "answer": "RAG stands for Retrieval Augmented Generation."
+}
+```
+
+---
+
+## Project Structure
+
+```text
 llm-platform/
-
-├── gateway/
-│   ├── cmd/
-│   │   └── server/
-│   ├── internal/
-│   │   ├── config/
-│   │   ├── handlers/
-│   │   ├── middleware/
-│   │   ├── models/
-│   │   └── service/
-│   │       └── llm/
-│   ├── Dockerfile
-│   ├── go.mod
-│   └── go.sum
-│
+├── gateway/              # Go API Gateway
+├── rag-service/          # FastAPI RAG service
+├── agent-service/        # Future work
+├── docker/
+├── docs/
 ├── docker-compose.yml
 └── README.md
 ```
 
 ---
 
-# Features
+## Current Version
 
-## API
+### v0.2.0
 
-* `POST /v1/chat`
-* `GET /healthz`
-* `GET /metrics`
-
-## Authentication
-
-* JWT validation
-* User claims extraction
-* Context propagation
-
-## Provider Abstraction
-
-* Mock Provider
-* Ollama Provider
-* OpenAI Provider
-
-## Middleware
-
-* Request ID
-* Structured Logging
-* Redis Rate Limiting
-* Request Timeout
-* Prometheus Metrics
-
-## Infrastructure
-
-* Docker
-* Docker Compose
-* Redis
-* Graceful Shutdown
-
----
-
-# Streaming
-
-The gateway streams responses using Server-Sent Events (SSE).
-
-```
-Client
-
-↓
-
-Gateway
-
-↓
-
-Provider
-
-↓
-
-Go Channel
-
-↓
-
-SSE Response
-```
-
----
-
-# Provider Routing
-
-The gateway selects the provider based on the incoming request.
-
-Example:
-
-```json
-{
-  "provider": "ollama",
-  "model": "llama3.2",
-  "message": "Explain Retrieval-Augmented Generation."
-}
-```
-
-or
-
-```json
-{
-  "provider": "openai",
-  "model": "gpt-4o-mini",
-  "message": "Explain Retrieval-Augmented Generation."
-}
-```
-
----
-
-# Running Locally
-
-## Start Ollama
-
-```bash
-ollama serve
-```
-
-Pull a model:
-
-```bash
-ollama pull llama3.2
-```
-
-## Start Redis
-
-```bash
-docker compose up redis
-```
-
-## Run the Gateway
-
-```bash
-REDIS_ADDR=localhost:6379 \
-JWT_SECRET=dev-secret \
-CGO_ENABLED=0 \
-go run ./gateway/cmd/server
-```
-
----
-
-# Running with Docker Compose
-
-```bash
-docker compose up --build
-```
-
----
-
-# Example Request
-
-```bash
-curl -N \
-  -X POST http://localhost:8080/v1/chat \
-  -H "Authorization: Bearer <JWT_TOKEN>" \
-  -H "Content-Type: application/json" \
-  -d '{
-        "provider":"ollama",
-        "model":"llama3.2",
-        "message":"Explain vector databases."
-      }'
-```
-
----
-
-# Technology Stack
-
-## Backend
-
-* Go
-* Gin
-
-## AI
-
-* Ollama
-* OpenAI
-
-## Infrastructure
-
-* Docker
-* Docker Compose
-* Redis
-
-## Observability
-
-* Prometheus
-
----
-
-# Roadmap
-
-## Phase 1 — AI Gateway ✅
+Completed:
 
 * Go API Gateway
 * JWT Authentication
-* Provider Routing
 * Redis Rate Limiting
-* Streaming Responses
-* Metrics
-* Docker
-
-## Phase 2 — Retrieval-Augmented Generation (Next)
-
-* PDF Upload
-* Document Chunking
-* Embeddings
-* PostgreSQL + pgvector
-* Semantic Search
-* Context Injection
-
-## Phase 3 — Agents
-
-* Tool Calling
-* Memory
-* Planner
-* Multi-Agent Workflows
-
-## Phase 4 — Production
-
-* Kubernetes
-* CI/CD
-* OpenTelemetry
-* Grafana
-* Horizontal Scaling
+* Request ID Middleware
+* Structured Logging
+* Provider Abstraction
+* OpenAI Provider
+* Ollama Provider
+* FastAPI RAG Service
+* PostgreSQL
+* pgvector
+* Token-aware Chunking
+* Embedding Providers
+* Similarity Search
+* Context Builder
+* Prompt Builder
+* Gateway → RAG Integration
+* Docker Compose Platform
+* End-to-End RAG through Gateway
 
 ---
 
-# Why This Project?
+## Next Milestone
 
-Most open-source LLM projects focus on building chat applications.
+Gateway-managed document ingestion:
 
-This project focuses on building the infrastructure that powers those applications—API gateways, model routing, observability, scalability, authentication, and production-ready engineering patterns.
+```
+Client
+    │
+    ▼
+Gateway
+    │
+    ▼
+RAG Service
+    │
+    ▼
+PostgreSQL + pgvector
+```
 
-The goal is to simulate the architecture and engineering practices used by companies building large-scale AI platforms.
+Clients will interact exclusively with the Gateway, while internal services remain private.
