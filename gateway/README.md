@@ -17,6 +17,7 @@ This project is designed to demonstrate the architecture, engineering practices,
 
 ---
 
+
 # Current Architecture
 
 ```
@@ -287,3 +288,12 @@ Most open-source LLM projects focus on building chat applications.
 This project focuses on building the infrastructure that powers those applications—API gateways, model routing, observability, scalability, authentication, and production-ready engineering patterns.
 
 The goal is to simulate the architecture and engineering practices used by companies building large-scale AI platforms.
+
+
+```md
+## Architecture
+
+See the full architecture diagram here:
+
+[Platform Architecture](docs/architecture/platform-architecture.md)
+```
