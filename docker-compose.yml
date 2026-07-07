@@ -12,10 +12,13 @@ services:
       REQUEST_TIMEOUT: "30s"
       OLLAMA_BASE_URL: "http://host.docker.internal:11434"
       REDIS_ADDR: "redis:6379"
+      RAG_SERVICE_URL: http://rag-service:8000
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
       - redis
+      - rag-service
+
   postgres:
     image: pgvector/pgvector:pg16
     container_name: llm-platform-postgres
@@ -31,8 +34,19 @@ services:
   redis:
     image: redis:7-alpine
     container_name: llm-redis
+
+  rag-service:
+    build:
+      context: ./rag-service
     ports:
-      - "6379:6379"    
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+psycopg://llm:llm@postgres:5432/rag
+      EMBEDDING_PROVIDER: ollama
+      CHAT_PROVIDER: ollama
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+    depends_on:
+      - postgres   
 
 volumes:
   postgres_data:

@@ -15,6 +15,7 @@ import (
 	"github.com/suchetamandal/llm-platform/gateway/internal/config"
 	"github.com/suchetamandal/llm-platform/gateway/internal/handlers"
 	"github.com/suchetamandal/llm-platform/gateway/internal/middleware"
+	"github.com/suchetamandal/llm-platform/gateway/internal/clients"
 )
 
 func main() {
@@ -22,6 +23,9 @@ func main() {
 	cfg := config.Load()
 
 	requestTimeout, err := time.ParseDuration(cfg.RequestTimeout)
+	ragClient := clients.NewRAGClient(cfg.RAGServiceURL, requestTimeout)
+	ragHandler := handlers.NewRAGHandler(ragClient)
+
 	if err != nil {
 		log.Fatalf("invalid REQUEST_TIMEOUT: %v", err)
 	}
@@ -43,6 +47,7 @@ func main() {
 	v1.Use(middleware.AuthMiddleware(cfg.JWTSecret))
 	v1.Use(middleware.RedisRateLimiter()) // previously it was RateLimiter
 	v1.POST("/chat", handlers.ChatHandler)
+	v1.POST("/rag", ragHandler.Ask)
 
 	server := &http.Server{
 		Addr:    ":" + cfg.Port,

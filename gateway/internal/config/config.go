@@ -7,6 +7,8 @@ type Config struct {
 	RequestTimeout string
 	OpenAIAPIKey   string
 	JWTSecret      string
+	RedisAddr      string
+	RAGServiceURL  string
 }
 
 func Load() Config {
@@ -25,10 +27,22 @@ func Load() Config {
 		jwtSecret = "dev-secret"
 	}
 
+	ragServiceURL := os.Getenv("RAG_SERVICE_URL")
+	if ragServiceURL == "" {
+		ragServiceURL = "http://localhost:8000"
+	}
+
+	redisAddr := os.Getenv("REDIS_ADDR")
+	if redisAddr == "" {
+		redisAddr = "localhost:6379"
+	}
+
 	return Config{
 		Port:           port,
 		RequestTimeout: timeout,
-		OpenAIAPIKey:   os.Getenv("OPENAI_API_KEY"),
+		OpenAIAPIKey:	os.Getenv("OPENAI_API_KEY"),
 		JWTSecret:      jwtSecret,
+		RedisAddr:		redisAddr,
+		RAGServiceURL:  ragServiceURL,
 	}
 }
