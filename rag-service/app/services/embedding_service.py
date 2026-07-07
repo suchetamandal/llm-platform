@@ -9,7 +9,7 @@ class EmbeddingService:
         self.provider = provider
         self.batch_size = settings.embedding_batch_size
 
-    async def generate_embeddings(
+    async def embed_chunks(
         self,
         document_id: str,
         chunks: list[DocumentChunk],
@@ -40,3 +40,13 @@ class EmbeddingService:
                 )
 
         return embeddings
+
+    async def embed_query(self, query: str) -> list[float]:
+        vectors = await self.provider.embed_texts([query])
+
+        if len(vectors) != 1:
+            raise ValueError(
+                f"Embedding provider returned {len(vectors)} vectors for query"
+            )
+
+        return vectors[0]

@@ -2,27 +2,29 @@ import uuid
 from pathlib import Path
 
 from fastapi import HTTPException, UploadFile
+from sqlalchemy.orm import Session
 
+from app.repositories.vector_repository import VectorRepository
 from app.core.config import settings
 from app.domain.document import DocumentUploadResponse
 from app.providers.embedding_provider_factory import EmbeddingProviderFactory
 from app.repositories.chunk_repository import ChunkRepository
 from app.repositories.document_storage import LocalDocumentStorage
-from app.repositories.embedding_repository import EmbeddingRepository
 from app.services.embedding_service import EmbeddingService
 from app.services.text_extraction_service import TextExtractionService
 from app.services.token_chunking_service import TokenChunkingService
 
 
 class DocumentService:
-    def __init__(self):
+    def __init__(self, db: Session):
+        self.db = db
+        self.vector_repository = VectorRepository(db)
         self.storage = LocalDocumentStorage(settings.storage_dir)
         self.text_extractor = TextExtractionService()
         self.chunker = TokenChunkingService()
         self.chunk_repository = ChunkRepository()
 
         self.embedding_service = EmbeddingService(EmbeddingProviderFactory.create())
-        self.embedding_repository = EmbeddingRepository()
 
     async def upload_document(self, file: UploadFile) -> DocumentUploadResponse:
         if not file.filename:
@@ -54,18 +56,14 @@ class DocumentService:
             text=extracted_text,
         )
 
-        self.chunk_repository.save_chunks(
-            document_dir=document_dir,
-            chunks=chunks,
-        )
-
-        embeddings = await self.embedding_service.generate_embeddings(
+        embeddings = await self.embedding_service.embed_chunks(
             document_id=document_id,
             chunks=chunks,
         )
 
-        self.embedding_repository.save_embeddings(
-            document_dir=document_dir,
+        self.vector_repository.save_chunks(
+            document_id=document_id,
+            chunks=chunks,
             embeddings=embeddings,
         )
 
