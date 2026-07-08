@@ -48,6 +48,7 @@ func main() {
 	v1.Use(middleware.RedisRateLimiter()) // previously it was RateLimiter
 	v1.POST("/chat", handlers.ChatHandler)
 	v1.POST("/rag", ragHandler.Ask)
+	v1.POST("/documents", handlers.UploadDocumentHandler)
 
 	server := &http.Server{
 		Addr:    ":" + cfg.Port,

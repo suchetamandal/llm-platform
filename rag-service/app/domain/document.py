@@ -1,12 +1,26 @@
+from enum import Enum
+from typing import Optional
+
 from pydantic import BaseModel
+
+
+class DocumentStatus(str, Enum):
+    UPLOADED = "UPLOADED"
+    PROCESSING = "PROCESSING"
+    READY = "READY"
+    FAILED = "FAILED"
 
 
 class DocumentUploadResponse(BaseModel):
     document_id: str
     filename: str
     content_type: str
-    storage_path: str
-    extracted_text_path: str
-    status: str
-    extracted_chars: int
-    chunk_count: int
+    status: DocumentStatus
+
+
+class DocumentStatusResponse(BaseModel):
+    document_id: str
+    filename: str
+    content_type: str
+    status: DocumentStatus
+    error_message: Optional[str] = None

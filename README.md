@@ -101,6 +101,184 @@ The RAG service is intended to be an internal service. Clients communicate only 
 
 ### Document Ingestion
 
+# v0.3.0 – Asynchronous Document Ingestion
+
+## Overview
+
+The RAG platform now supports asynchronous document ingestion. Documents are accepted through the API and immediately acknowledged, while ingestion (text extraction, chunking, embedding generation, and vector storage) executes asynchronously.
+
+This design decouples document upload latency from indexing latency and establishes the foundation for production-scale ingestion pipelines.
+
+---
+
+## Architecture
+
+```text
+                    Public API
+                         │
+                         ▼
+                API Gateway (Go)
+                         │
+                         ▼
+               RAG Service (FastAPI)
+                         │
+              POST /v1/documents
+                         │
+                         ▼
+              Save Uploaded Document
+                         │
+                         ▼
+         Create Document Metadata (UPLOADED)
+                         │
+                         ▼
+             Return Response Immediately
+                         │
+────────────────────────────────────────────────────────
+
+              Background Processing Pipeline
+
+────────────────────────────────────────────────────────
+                         │
+                         ▼
+                  PROCESSING
+                         │
+                         ▼
+                Text Extraction
+                         │
+                         ▼
+             Token-aware Chunking
+                         │
+                         ▼
+              Embedding Generation
+                         │
+                         ▼
+          PostgreSQL + pgvector Storage
+                         │
+                         ▼
+                      READY
+```
+
+---
+
+## Document Lifecycle
+
+Every uploaded document moves through a well-defined lifecycle.
+
+```text
+UPLOADED
+    │
+    ▼
+PROCESSING
+    │
+    ├──────────────► FAILED
+    │                    │
+    ▼                    ▼
+READY              Error Message Stored
+```
+
+### Status Definitions
+
+| Status         | Description                                                |
+| -------------- | ---------------------------------------------------------- |
+| **UPLOADED**   | File successfully stored and metadata created.             |
+| **PROCESSING** | Background ingestion pipeline is running.                  |
+| **READY**      | Document has been indexed and is available for retrieval.  |
+| **FAILED**     | Processing failed. Error details are stored for debugging. |
+
+---
+
+## Public APIs
+
+### Upload Document
+
+```http
+POST /v1/documents
+```
+
+Uploads a document through the Gateway. The Gateway forwards the request to the internal RAG service.
+
+Example response:
+
+```json
+{
+  "document_id": "a1bcfd41-f264-44c4-a067-ab432378a424",
+  "filename": "test.txt",
+  "content_type": "text/plain",
+  "status": "UPLOADED"
+}
+```
+
+---
+
+### Document Status
+
+```http
+GET /v1/documents/{document_id}
+```
+
+Example response:
+
+```json
+{
+  "document_id": "a1bcfd41-f264-44c4-a067-ab432378a424",
+  "filename": "test.txt",
+  "content_type": "text/plain",
+  "status": "READY",
+  "error_message": null
+}
+```
+
+---
+
+## Current Ingestion Pipeline
+
+The background ingestion pipeline performs the following steps:
+
+1. Save uploaded document
+2. Create document metadata
+3. Extract text
+4. Perform token-aware chunking
+5. Generate embeddings
+6. Store vectors in PostgreSQL with pgvector
+7. Update document status
+
+---
+
+## Current Platform Architecture
+
+```text
+                Client
+                   │
+                   ▼
+           API Gateway (Go)
+          ├───────────────┐
+          │               │
+          ▼               ▼
+     Chat Requests   Document Uploads
+          │               │
+          └──────┬────────┘
+                 ▼
+         RAG Service (FastAPI)
+                 │
+      ┌──────────┴──────────┐
+      ▼                     ▼
+Document Processing    Retrieval Pipeline
+      │                     │
+      ▼                     ▼
+PostgreSQL + pgvector    Ollama / OpenAI
+```
+
+---
+
+## Next Milestone
+
+**v0.4.0 – Durable Background Processing**
+
+The current implementation uses FastAPI BackgroundTasks for asynchronous ingestion.
+
+The next milestone replaces in-process background tasks with a production-ready job queue and worker architecture using Redis, enabling durable jobs, retries, worker scaling, and improved fault tolerance.
+
+
 ```text
 Upload Document
         │
