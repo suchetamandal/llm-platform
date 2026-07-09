@@ -1,9 +1,10 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, UploadFile
+from fastapi import APIRouter, Depends, UploadFile
 from sqlalchemy.orm import Session
 
 from app.db.dependencies import get_db
 from app.domain.document import DocumentUploadResponse, DocumentStatusResponse
 from app.services.document_service import DocumentService
+from app.queues.ingestion_queue import IngestionQueue
 
 router = APIRouter()
 
@@ -11,17 +12,13 @@ router = APIRouter()
 @router.post("/v1/documents", response_model=DocumentUploadResponse)
 async def upload_document(
     file: UploadFile,
-    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
     service = DocumentService(db)
+    queue = IngestionQueue()
 
     response = await service.upload_document(file)
-
-    background_tasks.add_task(
-        service.process_document,
-        response.document_id,
-    )
+    queue.enqueue_document(response.document_id)
 
     return response
 

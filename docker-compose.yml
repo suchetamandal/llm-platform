@@ -44,9 +44,29 @@ services:
       DATABASE_URL: postgresql+psycopg://llm:llm@postgres:5432/rag
       EMBEDDING_PROVIDER: ollama
       CHAT_PROVIDER: ollama
+      STORAGE_DIR: /app/storage
       OLLAMA_BASE_URL: http://host.docker.internal:11434
     depends_on:
-      - postgres   
+      - postgres 
+    volumes:
+      - ./rag-service/storage:/app/storage  
+
+  rag-worker:
+    build:
+      context: ./rag-service
+    command: python -m app.workers.document_ingestion_worker
+    environment:
+      DATABASE_URL: postgresql+psycopg://llm:llm@postgres:5432/rag
+      EMBEDDING_PROVIDER: ollama
+      CHAT_PROVIDER: ollama
+      REDIS_URL: redis://redis:6379/0
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+      STORAGE_DIR: /app/storage
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./rag-service/storage:/app/storage     
 
 volumes:
   postgres_data:

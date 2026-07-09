@@ -33,3 +33,27 @@ class RagService:
         answer = await self.chat_provider.generate(prompt)
 
         return answer, chunks
+
+
+    async def stream_answer(
+        self,
+        query: str,
+        top_k: int = 5,
+    ):
+        chunks = await self.retrieval_service.retrieve(
+            query=query,
+            top_k=top_k,
+        )
+
+        context = self.context_builder.build(chunks)
+
+        prompt = self.prompt_builder.build(
+            query=query,
+            context=context,
+        )
+
+        async for token in self.chat_provider.stream(prompt):
+            yield token
+
+
+            

@@ -20,6 +20,9 @@ class Settings(BaseSettings):
 
     database_url: str = "postgresql+psycopg://llm:llm@localhost:5432/rag"
 
+    redis_url: str = "redis://redis:6379/0"
+    ingestion_queue_name: str = "document_ingestion_queue"
+
     class Config:
         env_file = ".env"
 

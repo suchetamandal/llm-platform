@@ -2,6 +2,8 @@ import httpx
 
 from app.core.config import settings
 from app.providers.chat_provider import ChatProvider
+import json
+from collections.abc import AsyncIterator
 
 
 class OllamaChatProvider(ChatProvider):
@@ -22,3 +24,30 @@ class OllamaChatProvider(ChatProvider):
             response.raise_for_status()
             data = response.json()
             return data["response"]
+
+
+    async def stream(self, prompt: str) -> AsyncIterator[str]:
+        async with httpx.AsyncClient(timeout=None) as client:
+            async with client.stream(
+                "POST",
+                f"{self.base_url}/api/generate",
+                json={
+                    "model": self.model,
+                    "prompt": prompt,
+                    "stream": True,
+                },
+            ) as response:
+                response.raise_for_status()
+
+                async for line in response.aiter_lines():
+                    if not line:
+                        continue
+
+                    data = json.loads(line)
+                    token = data.get("response", "")
+
+                    if token:
+                        yield token
+
+                    if data.get("done"):
+                        break

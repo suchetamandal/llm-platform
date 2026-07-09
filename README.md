@@ -322,6 +322,30 @@ LLM
 Answer
 ```
 
+
+## v0.5.0 – Streaming RAG Responses
+
+The platform now supports end-to-end streaming RAG responses through the Gateway.
+
+### API
+
+```http
+POST /v1/rag/stream
+
+```
+
+Example 
+
+```bash
+curl -N -X POST http://localhost:8080/v1/rag/stream \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query":"What is RAG?",
+    "top_k":3
+  }'
+```
+
 ---
 
 # Local Development
